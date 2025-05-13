@@ -24,7 +24,7 @@ public class HomeController {
     @GetMapping("/")
     public String home() {
         String formattedDate = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now());
-        return "<h1>Server is online</h1>"+formattedDate;
+        return "<h1>Server is online!</h1> <h3>"+formattedDate+"</h3>";
     }
 
     @GetMapping("/properties")

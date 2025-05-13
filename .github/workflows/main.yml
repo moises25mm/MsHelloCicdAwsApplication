@@ -1,0 +1,50 @@
+name: Deploy java micro on AWS-ECR
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  create-docker-image:
+    name: Building a Docker Image from micro
+    runs-on: openjdk:21-slim
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configura Credenciales de AWS
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Iniciar sesion en AWS ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Crear, etiqueta y enviar imagen a AWS ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: encora-learning-repos/moy/ms-hello-cicd-aws
+          IMAGE_TAG: latest
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+    deploy:
+      name: Enviar imagen docker a AWS ECS
+      runs-on: openjdk:21-slim
+      needs: create-docker-image
+      steps:
+        - name: Configurar Credenciales de AWS
+          uses: aws-actions/configure-aws-credentials@v1
+          with:
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws-region: us-east-1
+
+        - name: Actualizar version en ECS
+          run: |
+            aws ecs update-service --cluster ms-hello-cicd-aws-CLUSTER --service ms-hello-cicd-aws-TASK-service-5qwbofr7 --task-definition ms-hello-cicd-aws-TASK --force-new-deployment
+            
+            
