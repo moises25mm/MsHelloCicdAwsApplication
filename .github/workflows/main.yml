@@ -20,7 +20,7 @@ jobs:
 
       - name: Iniciar sesion en AWS ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Crear, etiqueta y enviar imagen a AWS ECR
         env:
